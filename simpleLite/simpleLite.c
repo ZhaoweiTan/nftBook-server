@@ -18,6 +18,14 @@
 #include <AR/ar.h>
 #include <AR/gsub_lite.h>
 
+// socket
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 // ============================================================================
 //     Constants
 // ============================================================================
@@ -63,6 +71,15 @@ static int gShowMode = 1;
 static int gDrawRotate = FALSE;
 static float gDrawRotateAngle = 0; // For use in drawing.
 
+
+// socket
+struct sockaddr_in myaddr;	/* our address */
+struct sockaddr_in remaddr;	/* remote address */
+socklen_t addrlen = sizeof(remaddr);		/* length of addresses */
+int recvlen;			/* # bytes received */
+int fd;				/* our socket */
+int msgcnt = 0;			/* count # of messages we received */
+int SERVICE_PORT = 10000;
 
 // ============================================================================
 //     Function prototypes.
@@ -146,13 +163,15 @@ static int setupCamera(const char *cparam_name, char *vconf,
   ARLOGi("Camera image size (x,y) = (%d,%d)\n", xsize, ysize);
 
   // Get the format in which the camera is returning pixels.
-  // pixFormat = arVideoGetPixelFormat();
-  // if (pixFormat == AR_PIXEL_FORMAT_INVALID) {
-  //   ARLOGe("setupCamera(): Camera is using unsupported pixel format.\n");
-  //   arVideoClose();
-  //   return (FALSE);
-  // }
-  pixFormat = AR_PIXEL_FORMAT_NV21;
+  pixFormat = arVideoGetPixelFormat();
+  if (pixFormat == AR_PIXEL_FORMAT_INVALID) {
+    ARLOGe("setupCamera(): Camera is using unsupported pixel format.\n");
+    arVideoClose();
+    return (FALSE);
+  }
+  // xsize = 1280;
+  // ysize = 1024;
+  // pixFormat = AR_PIXEL_FORMAT_NV21;
 
   // Load the camera parameters, resize for the window and init.
   if (arParamLoad(cparam_name, 1, &cparam) < 0) {
@@ -324,6 +343,40 @@ static void mainLoop(void)
 
   int j, k;
 
+  // // socket
+  // unsigned char buf[1200]; /* receive buffer */
+  // unsigned char currentFrame[12100];
+
+  // short* frame_id = (short*)malloc(sizeof(short));
+  // short* segment_id = (short*)malloc(sizeof(short));
+  // short* last_segment_tag = (short*)malloc(sizeof(short));
+
+  // *last_segment_tag = 0;
+  // /* now loop, receiving data and printing what we received */
+  // int total_size = 0;
+  // for (int t = 0; t < 12100; t++) {
+  //   currentFrame[t] = 10;
+  // }
+  // while (*last_segment_tag != 1) {
+  //   printf("waiting on port %d\n", SERVICE_PORT);
+  //   recvlen = recvfrom(fd, buf, 1200, 0, (struct sockaddr *)&remaddr, &addrlen);
+  //   if (recvlen > 0) {
+  //     buf[recvlen] = 0;
+  //     memcpy(currentFrame+total_size, buf+4, recvlen-4);
+  //     total_size += recvlen;
+  //     memcpy(frame_id, buf, 2);
+  //     *segment_id = 0;
+  //     memcpy(segment_id, buf + 2, 1);
+  //     *last_segment_tag = 0;
+  //     memcpy(last_segment_tag, buf + 3, 1);
+  //     printf("received message frame id: %hi, segment id: $hi, last segment flag: %hi\n", *frame_id, *segment_id, *last_segment_tag);
+  //   }
+  //   else
+  //     printf("uh oh - something went wrong!\n");
+
+  // }
+
+
   // Find out how long since mainLoop() last ran.
   ms = glutGet(GLUT_ELAPSED_TIME);
   s_elapsed = (float)(ms - ms_prev) * 0.001f;
@@ -337,6 +390,10 @@ static void mainLoop(void)
   // Grab a video frame.
   if ((image = arVideoGetImage()) != NULL) {
     gARTImage = image; // Save the fetched image.
+
+
+  // if (TRUE) {
+  //   gARTImage = currentFrame;
 
     if (gARTImageSavePlease) {
       char imageNumberText[15];
@@ -485,6 +542,24 @@ static void Display(void)
 
 int main(int argc, char** argv)
 {
+  /* create a UDP socket */
+  if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    perror("cannot create socket\n");
+    return 0;
+  }
+
+  /* bind the socket to any valid IP address and a specific port */
+  memset((char *)&myaddr, 0, sizeof(myaddr));
+  myaddr.sin_family = AF_INET;
+  myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  myaddr.sin_port = htons(SERVICE_PORT);
+
+  if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
+    perror("bind failed");
+    return 0;
+  }
+
+  // simpleLite start
   char glutGamemode[32];
   char cparam_name[] = "camera_para.dat";
   char vconf[] = "";
