@@ -16,11 +16,11 @@ Current Progress
 ### Realized video upstream and downstream between android endpoint and remote server ###
 We have implemented the video stream transfer between two endpoints using UDP. The client (Android smartphone) could initiate an AR session with server, by sending the message in pre-defined format to finish the initialization. Upon receiving the message, the server side acknowledges this packet, and then opens and listens to various ports, which receive different type of messages from the client, as we will introduce later.
 
-When the client detects that the server is running, it collects data locally, and sends them through the socket to the server. The stream data includes the video frames captured by the camera, along with the sensor information harnessed by the built-in Android sensors. Each type is sent to a different socket in the server side, and the edge server is able to process different kind of information to execute further tasks.  
+When the client detects that the server is running, it collects data locally, and sends them through the socket to the server. The stream data includes the video frames captured by the camera, along with the sensor information harnessed by the built-in Android sensors. Each type is sent to a different socket in the server side, and the edge server is able to process different kind of information to execute further tasks.
 
 Below is a snapshot of server's receiving UDP packets. The UDP payload is 1100 Bytes. You could find the detailed implementation in our github repos.
 
-![Image of Server Receiving](server_screenshot.png)
+<img src="server_screenshot.png" alt="Image of Server Receiving" algin="center" width="600"/>
 
 ### Designed the video frame transfer protocol based on UDP ###
 Each packet size in a stream is bounded by the path MTU, we segment our video frame before they are transported to the Internet. Given the receiving application should be aware of the boundary of each while being able to check whether the frame is integrated, the pure UDP is not sufficient.
@@ -34,6 +34,7 @@ Therefore, we designed a video transfer protocol in which we add:
   * FIN flag (1 byte)
 
 Below is a snippet of code where the server reads the header of an incoming video frame and extracts the information out of it.
+
 ```
 Language: C
 Function: Packet decoding at server
@@ -53,7 +54,7 @@ We successfully modify, compile, and run the ARToolKit applications on multiple 
 
 AR running on Android endpoint.
 
-![Image of AR running on Android](arAndroid.jpg)
+<img src="arAndroid.jpg" alt="Image of AR running on Android" algin="center" width="500"/>
 
 AR running on Linux.
 
