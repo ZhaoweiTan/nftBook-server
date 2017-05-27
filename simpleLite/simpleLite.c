@@ -80,6 +80,7 @@ int recvlen;			/* # bytes received */
 int fd;				/* our socket */
 int msgcnt = 0;			/* count # of messages we received */
 int SERVICE_PORT = 10000;
+int BUFSIZE = 2048;
 
 // ============================================================================
 //     Function prototypes.
@@ -342,7 +343,7 @@ static void mainLoop(void)
   ARdouble err;
 
   int j, k;
-  unsigned char buf[2048];
+  unsigned char buf[BUFSIZE];
   unsigned char* whole_frame = (char*)malloc(12100);
   int last_id = 0;
   /* now loop, receiving data and printing what we received */
