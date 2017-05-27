@@ -368,6 +368,9 @@ static void mainLoop(void)
       *last_segment_tag = 0;
       memcpy(last_segment_tag, buf + 3, 1);
       last_id = *last_segment_tag;
+      free(frame_id);
+      free(segment_id);
+      free(last_segment_tag);
       //printf("received message frame id: %hi, segment id: %hi, last segment flag: %hi\n", *frame_id, *segment_id, *last_segment_tag);
     }
     else
@@ -435,6 +438,8 @@ static void mainLoop(void)
     // Tell GLUT the display has changed.
     glutPostRedisplay();
   }
+
+  free(whole_frame);
 }
 
 //
