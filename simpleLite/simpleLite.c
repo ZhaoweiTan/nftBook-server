@@ -344,7 +344,7 @@ static void mainLoop(void)
 
   int j, k;
   unsigned char buf[BUFSIZE];
-  unsigned char* whole_frame = (char*)malloc(12100);
+  ARUint8 * whole_frame = (ARUint8 *)malloc(12100);
   int last_id = 0;
   /* now loop, receiving data and printing what we received */
   int total_size_received = 0;
@@ -372,9 +372,8 @@ static void mainLoop(void)
     }
     else
       printf("uh oh - something went wrong!\n");
+    ARLOGe("Received a whole frame of data.\n");
   }
-
-  printf("!!!!!Received one whole frame!!!!! length is: %d\n", total_size_received);
 
 
   // Find out how long since mainLoop() last ran.
@@ -388,12 +387,12 @@ static void mainLoop(void)
 
   // TODO
   // Grab a video frame.
-  if ((image = arVideoGetImage()) != NULL) {
-    gARTImage = image; // Save the fetched image.
+  // if ((image = arVideoGetImage()) != NULL) {
+  //   gARTImage = image; // Save the fetched image.
 
 
-  // if (TRUE) {
-  //   gARTImage = currentFrame;
+  if (total_size_received == 115200) {
+    gARTImage = whole_frame;
 
     if (gARTImageSavePlease) {
       char imageNumberText[15];
