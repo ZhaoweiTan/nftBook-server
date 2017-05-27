@@ -342,39 +342,38 @@ static void mainLoop(void)
   ARdouble err;
 
   int j, k;
+  unsigned char buf[2048];
+  unsigned char* whole_frame = (char*)malloc(12100);
+  int last_id = 0;
+  /* now loop, receiving data and printing what we received */
+  int total_size_received = 0;
+  while (last_id == 0) 
+  {
+    //printf("waiting on port %d\n", SERVICE_PORT);
+    recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
+    if (recvlen > 0) {
+      buf[recvlen] = '\0';
 
-  // // socket
-  // unsigned char buf[1200]; /* receive buffer */
-  // unsigned char currentFrame[12100];
+      memcpy(whole_frame+total_size_received, buf+4, recvlen-4);
+      total_size_received += recvlen-4;
 
-  // short* frame_id = (short*)malloc(sizeof(short));
-  // short* segment_id = (short*)malloc(sizeof(short));
-  // short* last_segment_tag = (short*)malloc(sizeof(short));
+      short* frame_id = (short*)malloc(sizeof(short));
+      *frame_id = 0;
+      memcpy(frame_id, buf, 2);
+      short* segment_id = (short*)malloc(sizeof(short));
+      *segment_id = 0;
+      memcpy(segment_id, buf + 2, 1);
+      short* last_segment_tag = (short*)malloc(sizeof(short));
+      *last_segment_tag = 0;
+      memcpy(last_segment_tag, buf + 3, 1);
+      last_id = *last_segment_tag;
+      //printf("received message frame id: %hi, segment id: %hi, last segment flag: %hi\n", *frame_id, *segment_id, *last_segment_tag);
+    }
+    else
+      printf("uh oh - something went wrong!\n");
+  }
 
-  // *last_segment_tag = 0;
-  // /* now loop, receiving data and printing what we received */
-  // int total_size = 0;
-  // for (int t = 0; t < 12100; t++) {
-  //   currentFrame[t] = 10;
-  // }
-  // while (*last_segment_tag != 1) {
-  //   printf("waiting on port %d\n", SERVICE_PORT);
-  //   recvlen = recvfrom(fd, buf, 1200, 0, (struct sockaddr *)&remaddr, &addrlen);
-  //   if (recvlen > 0) {
-  //     buf[recvlen] = 0;
-  //     memcpy(currentFrame+total_size, buf+4, recvlen-4);
-  //     total_size += recvlen;
-  //     memcpy(frame_id, buf, 2);
-  //     *segment_id = 0;
-  //     memcpy(segment_id, buf + 2, 1);
-  //     *last_segment_tag = 0;
-  //     memcpy(last_segment_tag, buf + 3, 1);
-  //     printf("received message frame id: %hi, segment id: $hi, last segment flag: %hi\n", *frame_id, *segment_id, *last_segment_tag);
-  //   }
-  //   else
-  //     printf("uh oh - something went wrong!\n");
-
-  // }
+  printf("!!!!!Received one whole frame!!!!! length is: %d\n", total_size_received);
 
 
   // Find out how long since mainLoop() last ran.
