@@ -344,12 +344,14 @@ static void mainLoop(void)
   ARdouble err;
 
   int j, k;
+
+  // socket
   unsigned char buf[BUFSIZE];
   ARUint8 * whole_frame = (ARUint8 *)malloc(frame_buffer_size);
   int last_id = 0;
   /* now loop, receiving data and printing what we received */
   int total_size_received = 0;
-  while (last_id == 0) 
+  while (last_id == 0)
   {
     //printf("waiting on port %d\n", SERVICE_PORT);
     recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
@@ -372,7 +374,8 @@ static void mainLoop(void)
       free(frame_id);
       free(segment_id);
       free(last_segment_tag);
-      //printf("received message frame id: %hi, segment id: %hi, last segment flag: %hi\n", *frame_id, *segment_id, *last_segment_tag);
+      //printf("received message frame id: %hi, segment id: %hi, last segment flag: %hi\n",
+      //        *frame_id, *segment_id, *last_segment_tag);
     }
     else
       printf("uh oh - something went wrong!\n");
