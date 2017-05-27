@@ -81,6 +81,7 @@ int fd;				/* our socket */
 int msgcnt = 0;			/* count # of messages we received */
 int SERVICE_PORT = 10000;
 int BUFSIZE = 2048;
+int frame_buffer_size = 120000;
 
 // ============================================================================
 //     Function prototypes.
@@ -344,7 +345,7 @@ static void mainLoop(void)
 
   int j, k;
   unsigned char buf[BUFSIZE];
-  ARUint8 * whole_frame = (ARUint8 *)malloc(12100);
+  ARUint8 * whole_frame = (ARUint8 *)malloc(frame_buffer_size);
   int last_id = 0;
   /* now loop, receiving data and printing what we received */
   int total_size_received = 0;
@@ -376,6 +377,7 @@ static void mainLoop(void)
     else
       printf("uh oh - something went wrong!\n");
     ARLOGe("Received a whole frame of data.\n");
+    *(whole_frame+total_size_received) = '\0';
   }
 
 
