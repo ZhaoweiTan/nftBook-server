@@ -21,6 +21,13 @@
 #include "trackingSub.h"
 #include "VirtualEnvironment.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 // ============================================================================
 //	Constants
 // ============================================================================
@@ -40,9 +47,9 @@
 
 // Preferences.
 static int prefWindowed = TRUE;           // Use windowed (TRUE) or fullscreen mode (FALSE) on launch.
-static int prefWidth = 640;               // Preferred initial window width.
-static int prefHeight = 480;              // Preferred initial window height.
-static int prefDepth = 32;                // Fullscreen mode bit depth. Set to 0 to use default depth.
+static int prefWidth = 320;               // Preferred initial window width.
+static int prefHeight = 240;              // Preferred initial window height.
+static int prefDepth = 16;                // Fullscreen mode bit depth. Set to 0 to use default depth.
 static int prefRefresh = 0;				  // Fullscreen mode refresh rate. Set to 0 to use default rate.
 
 // Image acquisition.
@@ -74,6 +81,17 @@ static ARdouble cameraLens[16];
 static ARdouble cameraPose[16];
 static int cameraPoseValid;
 
+// sender client socket
+struct sockaddr_in myaddr;  /* our address */
+struct sockaddr_in remaddr; /* remote address */
+socklen_t addrlen = sizeof(remaddr);    /* length of addresses */
+int recvlen;      /* # bytes received */
+int fd;       /* our socket */
+int msgcnt = 0;     /* count # of messages we received */
+int SERVICE_PORT = 10000;
+int BUFSIZE = 2048;
+int frame_buffer_size = 115201;
+
 
 // ============================================================================
 //	Function prototypes
@@ -95,8 +113,26 @@ static void Display(void);
 
 int main(int argc, char** argv)
 {
+
+  /* receiving UDP packets from sender client */
+  if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    perror("cannot create socket\n");
+    return 0;
+  }
+
+  /* bind the socket to any valid IP address and a specific port */
+  memset((char *)&myaddr, 0, sizeof(myaddr));
+  myaddr.sin_family = AF_INET;
+  myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  myaddr.sin_port = htons(SERVICE_PORT);
+
+  if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) {
+    perror("bind failed");
+    return 0;
+  }
+
   char    glutGamemode[32] = "";
-  char   *vconf = NULL;
+  char   *vconf = "-width=320 -height=240 -pixelformat=yuvs";
   char    cparaDefault[] = "Data2/camera_para.dat";
   char   *cpara = NULL;
   int     i;
@@ -316,10 +352,12 @@ static int setupCamera(const char *cparam_name, char *vconf, ARParamLT **cparamL
     arVideoClose();
     return (FALSE);
   }
+
   ARLOGi("Camera image size (x,y) = (%d,%d)\n", xsize, ysize);
 
   // Get the format in which the camera is returning pixels.
   pixFormat = arVideoGetPixelFormat();
+
   if (pixFormat == AR_PIXEL_FORMAT_INVALID) {
     ARLOGe("setupCamera(): Camera is using unsupported pixel format.\n");
     arVideoClose();
@@ -530,6 +568,45 @@ static void mainLoop(void)
 
   int             i, j, k;
 
+  unsigned char buf[BUFSIZE];
+  ARUint8 * whole_frame = (ARUint8 *)malloc(frame_buffer_size);
+  int last_id = 0;
+  /* now loop, receiving data and printing what we received */
+  int total_size_received = 0;
+  while (last_id == 0) 
+  {
+    if (total_size_received == 115200)
+       total_size_received = 0;
+    //printf("waiting on port %d\n", SERVICE_PORT);
+    recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
+    if (recvlen > 0) {
+      buf[recvlen] = '\0';
+
+      memcpy(whole_frame+total_size_received, buf+4, recvlen-4);
+      total_size_received += recvlen-4;
+
+      short* frame_id = (short*)malloc(sizeof(short));
+      *frame_id = 0;
+      memcpy(frame_id, buf, 2);
+      short* segment_id = (short*)malloc(sizeof(short));
+      *segment_id = 0;
+      memcpy(segment_id, buf + 2, 1);
+      short* last_segment_tag = (short*)malloc(sizeof(short));
+      *last_segment_tag = 0;
+      memcpy(last_segment_tag, buf + 3, 1);
+      last_id = *last_segment_tag;
+      free(frame_id);
+      free(segment_id);
+      free(last_segment_tag);
+      //printf("received message frame id: %hi, segment id: %hi, last segment flag: %hi\n", *frame_id, *segment_id, *last_segment_tag);
+    }
+    else
+      printf("uh oh - something went wrong!\n");
+    *(whole_frame+total_size_received) = '\0';
+  }
+
+  ARLOGe("Received a whole frame of size: %d.\n", total_size_received);
+
   // Calculate time delta.
   ms = glutGet(GLUT_ELAPSED_TIME);
   s_elapsed = (float)(ms - ms_prev) * 0.001f;
@@ -538,8 +615,12 @@ static void mainLoop(void)
   // TODO: get the frame here!!!
 
   // Grab a video frame.
-  if ((image = arVideoGetImage()) != NULL) {
-    gARTImage = image;	// Save the fetched image.
+  // if ((image = arVideoGetImage()) != NULL) {
+  //   gARTImage = image;	// Save the fetched image.
+
+  if (total_size_received == 115200) {
+
+  gARTImage = whole_frame;
 
     // Calculate FPS every 30 frames.
     if (gCallCountMarkerDetect % 30 == 0) {
@@ -631,6 +712,9 @@ static void mainLoop(void)
   } else {
     arUtilSleep(2);
   }
+
+  free(whole_frame);
+
 
 }
 

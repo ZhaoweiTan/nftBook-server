@@ -156,12 +156,15 @@ static int setupCamera(const char *cparam_name, char *vconf,
     return (FALSE);
   }
 
+  xsize = 320;
+  ysize = 240;
+
   // Find the size of the window.
-  if (arVideoGetSize(&xsize, &ysize) < 0) {
-    ARLOGe("setupCamera(): Unable to determine camera frame size.\n");
-    arVideoClose();
-    return (FALSE);
-  }
+  // if (arVideoGetSize(&xsize, &ysize) < 0) {
+  //   ARLOGe("setupCamera(): Unable to determine camera frame size.\n");
+  //   arVideoClose();
+  //   return (FALSE);
+  // }
   ARLOGi("Camera image size (x,y) = (%d,%d)\n", xsize, ysize);
 
   // Get the format in which the camera is returning pixels.
@@ -171,9 +174,8 @@ static int setupCamera(const char *cparam_name, char *vconf,
     arVideoClose();
     return (FALSE);
   }
-  // xsize = 1280;
-  // ysize = 1024;
-  // pixFormat = AR_PIXEL_FORMAT_NV21;
+  
+  pixFormat =  AR_PIXEL_FORMAT_NV21;
 
   // Load the camera parameters, resize for the window and init.
   if (arParamLoad(cparam_name, 1, &cparam) < 0) {
@@ -379,7 +381,7 @@ static void mainLoop(void)
     }
     else
       printf("uh oh - something went wrong!\n");
-    ARLOGe("Received a whole frame of data.\n");
+    //ARLOGe("Received a whole frame of data.\n");
     *(whole_frame+total_size_received) = '\0';
   }
 
