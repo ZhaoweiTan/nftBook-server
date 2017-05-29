@@ -1,13 +1,13 @@
 UNAME = $(shell uname)
 
-AR_HOME = /Users/ZhangZhiyi/Develop/Tools-Libs/ARToolKit5-MACOS
+AR_HOME = /Users/MAXWELL/Desktop/CS219/ARToolKit5OSX
 AR_CPPFLAGS = -I$(AR_HOME)/include/macosx-universal -I$(AR_HOME)/include
 AR_LDFLAGS = -L$(AR_HOME)/lib/macosx-universal -L$(AR_HOME)/lib
 
 OSG_LIBPATH = /usr/lib
 OSG_LIBS = -losg -lOpenThreads -losgDB -losgFX -losgGA -losgViewer -losgUtil
 ifeq "$(UNAME)" "Darwin"
-    OSG_LIBPATH = /Library/Frameworks
+    OSG_LIBPATH = /Library/frameworks
     OSG_LIBS = -framework osg -framework OpenThreads -framework osgDB -framework osgFX -framework osgGA -framework osgViewer -framework osgUtil -lstdc++
 endif
 OSG_CPPFLAGS =
