@@ -1,6 +1,6 @@
 UNAME = $(shell uname)
 
-AR_HOME = /Users/MAXWELL/Desktop/CS219/ARToolKit5OSX
+AR_HOME = /Users/ZhangZhiyi/Develop/Tools-Libs/ARToolKit5-MACOS
 AR_CPPFLAGS = -I$(AR_HOME)/include/macosx-universal -I$(AR_HOME)/include
 AR_LDFLAGS = -L$(AR_HOME)/lib/macosx-universal -L$(AR_HOME)/lib
 
