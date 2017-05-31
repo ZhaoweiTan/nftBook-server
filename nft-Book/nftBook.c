@@ -92,8 +92,8 @@ int send_fd; /* sender socket */
 int msgcnt = 0;     /* count # of messages we received */
 int SERVICE_PORT = 10000;
 int CLIENT_PORT = 9999;
-int BUFSIZE = 3000;
-int frame_buffer_size = 120000;
+int BUFSIZE = 2000;
+int frame_buffer_size = 400000;
 
 
 // ============================================================================
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
     }
     
     char    glutGamemode[32] = "";
-    char   *vconf = "-width=320 -height=240 -pixelformat=yuvs";
+    char   *vconf = "-device=Dummy -width=320 -height=240 -format=RGBA";
     char    cparaDefault[] = "Data2/camera_para.dat";
     char   *cpara = NULL;
     int     i;
@@ -593,21 +593,37 @@ static void mainLoop(void)
         recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
         if (recvlen > 0) {
             buf[recvlen] = '\0';
-            if (total_size_received >= 115200)
+            if (total_size_received >= 307200)
                 break;
-            memcpy(whole_frame+total_size_received, buf+4, recvlen-4);
-            total_size_received += recvlen-4;
+            
+//            memcpy(whole_frame+total_size_received, buf+4, recvlen-4);
+//            total_size_received += recvlen-4;
+//            
+//            short* frame_id = (short*)malloc(sizeof(short));
+//            *frame_id = 0;
+//            memcpy(frame_id, buf, 2);
+//            short* segment_id = (short*)malloc(sizeof(short));
+//            *segment_id = 0;
+//            memcpy(segment_id, buf + 2, 1);
+//            short* last_segment_tag = (short*)malloc(sizeof(short));
+//            *last_segment_tag = 0;
+//            memcpy(last_segment_tag, buf + 3, 1);
+//            last_id = *last_segment_tag;
+            
+            memcpy(whole_frame+total_size_received, buf+6, recvlen-6);
+            total_size_received += recvlen-6;
             
             short* frame_id = (short*)malloc(sizeof(short));
             *frame_id = 0;
             memcpy(frame_id, buf, 2);
             short* segment_id = (short*)malloc(sizeof(short));
             *segment_id = 0;
-            memcpy(segment_id, buf + 2, 1);
+            memcpy(segment_id, buf + 2, 2);
             short* last_segment_tag = (short*)malloc(sizeof(short));
             *last_segment_tag = 0;
-            memcpy(last_segment_tag, buf + 3, 1);
+            memcpy(last_segment_tag, buf + 4, 2);
             last_id = *last_segment_tag;
+
             free(frame_id);
             free(segment_id);
             free(last_segment_tag);
@@ -628,7 +644,7 @@ static void mainLoop(void)
     // if ((image = arVideoGetImage()) != NULL) {
     //   gARTImage = image; // Save the fetched image.
     
-    if (total_size_received == 115200) {
+    if (total_size_received == 307200) {
         
         gARTImage = whole_frame;
         
