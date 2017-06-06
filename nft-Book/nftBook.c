@@ -3,7 +3,7 @@
 // ============================================================================
 
 #include <stdio.h>
-#include <stdlib.h>         // malloc(), free()
+#include <stdlib.h>                 // malloc(), free()
 #include <string.h>
 #ifdef __APPLE__
 #  include <GLUT/glut.h>
@@ -34,9 +34,9 @@
 
 #define PAGES_MAX               10          // Maximum number of pages expected. You can change this down (to save memory) or up (to accomodate more pages.)
 
-#define VIEW_SCALEFACTOR    1.0     // Units received from ARToolKit tracking will be multiplied by this factor before being used in OpenGL drawing.
-#define VIEW_DISTANCE_MIN   10.0    // Objects closer to the camera than this will not be displayed. OpenGL units.
-#define VIEW_DISTANCE_MAX   10000.0   // Objects further away from the camera than this will not be displayed. OpenGL units.
+#define VIEW_SCALEFACTOR        1.0         // Units received from ARToolKit tracking will be multiplied by this factor before being used in OpenGL drawing.
+#define VIEW_DISTANCE_MIN       10.0        // Objects closer to the camera than this will not be displayed. OpenGL units.
+#define VIEW_DISTANCE_MAX       10000.0     // Objects further away from the camera than this will not be displayed. OpenGL units.
 
 #define FONT_SIZE 10.0f
 #define FONT_LINE_SPACING 2.0f
@@ -50,11 +50,11 @@ static int prefWindowed = TRUE;           // Use windowed (TRUE) or fullscreen m
 static int prefWidth = 320;               // Preferred initial window width.
 static int prefHeight = 240;              // Preferred initial window height.
 static int prefDepth = 16;                // Fullscreen mode bit depth. Set to 0 to use default depth.
-static int prefRefresh = 0;         // Fullscreen mode refresh rate. Set to 0 to use default rate.
+static int prefRefresh = 0;               // Fullscreen mode refresh rate. Set to 0 to use default rate.
 
 // Image acquisition.
-static ARUint8    *gARTImage = NULL;
-static long     gCallCountMarkerDetect = 0;
+static ARUint8      *gARTImage = NULL;
+static long         gCallCountMarkerDetect = 0;
 
 // Markers.
 static ARMarkerNFT *markersNFT = NULL;
@@ -92,8 +92,8 @@ int send_fd; /* sender socket */
 int msgcnt = 0;     /* count # of messages we received */
 int SERVICE_PORT = 10000;
 int CLIENT_PORT = 9999;
-int BUFSIZE = 2000;
-int frame_buffer_size = 400000;
+int BUFSIZE = 1025;
+int frame_buffer_size = 120000;
 
 
 // ============================================================================
@@ -137,6 +137,7 @@ int main(int argc, char** argv)
     memset((char *)&dstaddr, 0, sizeof(dstaddr));
     dstaddr.sin_family = AF_INET;
     dstaddr.sin_addr.s_addr = inet_addr("192.168.0.27");
+    //dstaddr.sin_addr.s_addr = inet_addr("131.179.210.120");
     dstaddr.sin_port = htons(10001);
     
     
@@ -146,7 +147,7 @@ int main(int argc, char** argv)
     }
     
     char    glutGamemode[32] = "";
-    char   *vconf = "-device=Dummy -width=320 -height=240 -format=RGBA";
+    char   *vconf = "-device=Dummy -width=176 -height=144 -format=RGBA";
     char    cparaDefault[] = "Data2/camera_para.dat";
     char   *cpara = NULL;
     int     i;
@@ -350,8 +351,8 @@ static void usage(char *com)
 
 static int setupCamera(const char *cparam_name, char *vconf, ARParamLT **cparamLT_p)
 {
-    ARParam     cparam;
-    int       xsize, ysize;
+    ARParam         cparam;
+    int             xsize, ysize;
     AR_PIXEL_FORMAT pixFormat;
     
     // Open the video path.
@@ -553,7 +554,7 @@ static void cleanup(void)
 static void Keyboard(unsigned char key, int x, int y)
 {
     switch (key) {
-        case 0x1B:            // Quit.
+        case 0x1B:                      // Quit.
         case 'Q':
         case 'q':
             cleanup();
@@ -593,9 +594,9 @@ static void mainLoop(void)
         recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
         if (recvlen > 0) {
             buf[recvlen] = '\0';
-            if (total_size_received >= 307200)
+            //ARLOGe("Received a buffer: %d.\n", recvlen);
+            if (total_size_received > 101376)
                 break;
-            
 //            memcpy(whole_frame+total_size_received, buf+4, recvlen-4);
 //            total_size_received += recvlen-4;
 //            
@@ -644,7 +645,7 @@ static void mainLoop(void)
     // if ((image = arVideoGetImage()) != NULL) {
     //   gARTImage = image; // Save the fetched image.
     
-    if (total_size_received == 307200) {
+    if (total_size_received == 101376) {
         
         gARTImage = whole_frame;
         
