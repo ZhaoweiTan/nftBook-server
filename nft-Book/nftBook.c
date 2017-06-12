@@ -137,7 +137,7 @@ int main(int argc, char** argv)
 
   memset((char *)&dstaddr, 0, sizeof(dstaddr));
   dstaddr.sin_family = AF_INET;
-  dstaddr.sin_addr.s_addr = inet_addr("192.168.0.100");
+  dstaddr.sin_addr.s_addr = inet_addr("192.168.0.103");
   //dstaddr.sin_addr.s_addr = inet_addr("131.179.210.120");
   dstaddr.sin_port = htons(10001);
 
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
   }
 
   char    glutGamemode[32] = "";
-  char   *vconf = "-device=Dummy -width=176 -height=144 -format=RGBA";
+  char   *vconf = "-device=Image -width=176 -height=144 -format=RGB";
   char    cparaDefault[] = "Data2/camera_para.dat";
   char   *cpara = NULL;
   int     i;
