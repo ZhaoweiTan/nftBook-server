@@ -148,7 +148,7 @@ int main(int argc, char** argv)
   }
 
   char    glutGamemode[32] = "";
-  char   *vconf = "-device=Image -width=176 -height=144 -format=RGB";
+  char   *vconf = "-device=Dummy -width=176 -height=144 -format=RGBA";
   char    cparaDefault[] = "Data2/camera_para.dat";
   char   *cpara = NULL;
   int     i;
@@ -593,6 +593,17 @@ void jpegErrorExit (j_common_ptr cinfo)
 
 }
 
+void fast_unpack(char* rgba, const char* rgb, const int count) {
+  if(count==0)
+    return;
+  for(int i=count; --i; rgba+=4, rgb+=3) {
+    *(uint32_t*)(void*)rgba = *(const uint32_t*)(const void*)rgb;
+  }
+  for(int j=0; j<3; ++j) {
+    rgba[j] = rgb[j];
+  }
+}
+
 static void mainLoop(void)
 {
   static int ms_prev;
@@ -621,6 +632,10 @@ static void mainLoop(void)
       *last_segment_tag = 0;
       memcpy(last_segment_tag, buf + 3, 1);
 
+      printf("received message frame id: %d", *frame_id);
+      printf("segment id: %d", *segment_id);
+      printf("received message frame id: %d", *last_segment_tag);
+
       if (*last_segment_tag == 1 && hasStart == 0) {
         free(frame_id);
         free(segment_id);
@@ -631,10 +646,6 @@ static void mainLoop(void)
       else if (*last_segment_tag == 1 && hasStart == 1) {
         memcpy(whole_frame + total_size_received, buf + 4, recvlen - 4);
         total_size_received += recvlen - 4;
-
-        // std::cout << "received message frame id: " << *frame_id
-        //           << " segment id: " << *segment_id
-        //           << " last segment flag: " << *last_segment_tag;
 
         free(frame_id);
         free(segment_id);
@@ -654,9 +665,6 @@ static void mainLoop(void)
       free(frame_id);
       free(segment_id);
       free(last_segment_tag);
-      // std::cout << " received message frame id: " << *frame_id
-      //           << " segment id: " << *segment_id
-      //           << " last segment flag: " << *last_segment_tag << std::endl;
     }
     else
       printf("uh oh - something went wrong!\n");
@@ -702,6 +710,9 @@ static void mainLoop(void)
   jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
 
+  rgba_frame = (ARUint8 *)malloc(cinfo.image_width*cinfo.image_height*4);
+  fast_unpack(rgba_frame, rgb_frame, cinfo.image_width*cinfo.image_height);
+
   // Calculate time delta.
   ms = glutGet(GLUT_ELAPSED_TIME);
   s_elapsed = (float)(ms - ms_prev) * 0.001f;
@@ -709,7 +720,7 @@ static void mainLoop(void)
 
   // Grab a video frame.
   if (true) {
-    gARTImage = rgb_frame;
+    gARTImage = rgba_frame;
 
     // Calculate FPS every 30 frames.
     if (gCallCountMarkerDetect % 30 == 0) {
