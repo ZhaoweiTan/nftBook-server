@@ -136,7 +136,7 @@ int main(int argc, char** argv)
     
     memset((char *)&dstaddr, 0, sizeof(dstaddr));
     dstaddr.sin_family = AF_INET;
-    dstaddr.sin_addr.s_addr = inet_addr("192.168.0.27");
+    dstaddr.sin_addr.s_addr = inet_addr("192.168.2.5");
     //dstaddr.sin_addr.s_addr = inet_addr("131.179.210.120");
     dstaddr.sin_port = htons(10001);
     
@@ -597,19 +597,19 @@ static void mainLoop(void)
             //ARLOGe("Received a buffer: %d.\n", recvlen);
             if (total_size_received > 101376)
                 break;
-//            memcpy(whole_frame+total_size_received, buf+4, recvlen-4);
-//            total_size_received += recvlen-4;
-//            
-//            short* frame_id = (short*)malloc(sizeof(short));
-//            *frame_id = 0;
-//            memcpy(frame_id, buf, 2);
-//            short* segment_id = (short*)malloc(sizeof(short));
-//            *segment_id = 0;
-//            memcpy(segment_id, buf + 2, 1);
-//            short* last_segment_tag = (short*)malloc(sizeof(short));
-//            *last_segment_tag = 0;
-//            memcpy(last_segment_tag, buf + 3, 1);
-//            last_id = *last_segment_tag;
+            //            memcpy(whole_frame+total_size_received, buf+4, recvlen-4);
+            //            total_size_received += recvlen-4;
+            //
+            //            short* frame_id = (short*)malloc(sizeof(short));
+            //            *frame_id = 0;
+            //            memcpy(frame_id, buf, 2);
+            //            short* segment_id = (short*)malloc(sizeof(short));
+            //            *segment_id = 0;
+            //            memcpy(segment_id, buf + 2, 1);
+            //            short* last_segment_tag = (short*)malloc(sizeof(short));
+            //            *last_segment_tag = 0;
+            //            memcpy(last_segment_tag, buf + 3, 1);
+            //            last_id = *last_segment_tag;
             
             memcpy(whole_frame+total_size_received, buf+6, recvlen-6);
             total_size_received += recvlen-6;
@@ -624,7 +624,7 @@ static void mainLoop(void)
             *last_segment_tag = 0;
             memcpy(last_segment_tag, buf + 4, 2);
             last_id = *last_segment_tag;
-
+            
             free(frame_id);
             free(segment_id);
             free(last_segment_tag);
@@ -711,11 +711,11 @@ static void mainLoop(void)
                 sizeofinfo += sizeof(float);
             }
         }
-
+        
         marker_client_buffer[sizeofinfo] = '\0';
         sizeofinfo += 1;
         //char marker_client_buffer[20] = "Hello server!";
-
+        
         //ARLOGe("Size of markers: %d\n", markersNFTCount);
         if (sendto(send_fd, marker_client_buffer, sizeofinfo, 0, (struct sockaddr *)&dstaddr, sizeof(dstaddr)) < 0)
         {
