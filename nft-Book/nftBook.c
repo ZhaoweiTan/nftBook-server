@@ -148,7 +148,7 @@ int main(int argc, char** argv)
   }
 
   char    glutGamemode[32] = "";
-  char   *vconf = "-device=Dummy -width=176 -height=144 -format=RGBA";
+  char   *vconf = "-device=Dummy -width=320 -height=240 -format=RGBA";
   char    cparaDefault[] = "Data2/camera_para.dat";
   char   *cpara = NULL;
   int     i;
@@ -611,6 +611,8 @@ static void mainLoop(void)
   int ms, i, j, k;
 
   unsigned char buf[BUFSIZE];
+  ARUint8* rgb_frame;
+  ARUint8* rgba_frame;
   ARUint8 * whole_frame = (ARUint8 *)malloc(frame_buffer_size);
 
   int total_size_received = 0;
@@ -672,8 +674,6 @@ static void mainLoop(void)
   ARLOGe("Received a whole frame of size: %d.\n", total_size_received);
 
   // do JPEG to RGBA
-  ARUint8* rgb_frame;
-  ARUint8* rgba_frame;
   struct jpeg_decompress_struct cinfo;
   struct jpegErrorManager jerr;
 
@@ -793,6 +793,7 @@ static void mainLoop(void)
       {
         ARLOGe("Sending markers to client failed.\n");
       }
+    // free(marker_client_buffer);
 
     ARLOGe("send successully %d, %f, %f, %f\n", detectedPage, trackingTrans[0][0], trackingTrans[0][2], trackingTrans[2][0]);
 
@@ -838,8 +839,10 @@ static void mainLoop(void)
     arUtilSleep(2);
   }
 
-  free(whole_frame);
-  free(rgb_frame);
+
+  // free(whole_frame);
+  // free(rgb_frame);
+  // free(rgba_frame);
 }
 
 //
