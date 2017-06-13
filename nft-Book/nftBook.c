@@ -137,7 +137,7 @@ int main(int argc, char** argv)
 
   memset((char *)&dstaddr, 0, sizeof(dstaddr));
   dstaddr.sin_family = AF_INET;
-  dstaddr.sin_addr.s_addr = inet_addr("192.168.0.103");
+  dstaddr.sin_addr.s_addr = inet_addr("192.168.2.5");
   //dstaddr.sin_addr.s_addr = inet_addr("131.179.210.120");
   dstaddr.sin_port = htons(10001);
 
@@ -627,12 +627,12 @@ static void mainLoop(void)
       short* frame_id = (short*)malloc(sizeof(short));
       *frame_id = 0;
       memcpy(frame_id, buf, 2);
-      short* segment_id = (short*)malloc(sizeof(char));
+      short* segment_id = (short*)malloc(sizeof(short));
       *segment_id = 0;
-      memcpy(segment_id, buf + 2, 1);
-      short* last_segment_tag = (short*)malloc(sizeof(char));
+      memcpy(segment_id, buf + 2, 2);
+      short* last_segment_tag = (short*)malloc(sizeof(short));
       *last_segment_tag = 0;
-      memcpy(last_segment_tag, buf + 3, 1);
+      memcpy(last_segment_tag, buf + 4, 2);
 
       printf("received message frame id: %d", *frame_id);
       printf("segment id: %d", *segment_id);
@@ -646,8 +646,8 @@ static void mainLoop(void)
         continue;
       }
       else if (*last_segment_tag == 1 && hasStart == 1) {
-        memcpy(whole_frame + total_size_received, buf + 4, recvlen - 4);
-        total_size_received += recvlen - 4;
+        memcpy(whole_frame + total_size_received, buf + 6, recvlen - 6);
+        total_size_received += recvlen - 6;
 
         free(frame_id);
         free(segment_id);
@@ -661,8 +661,8 @@ static void mainLoop(void)
         continue;
       }
 
-      memcpy(whole_frame + total_size_received, buf + 4, recvlen - 4);
-      total_size_received += recvlen - 4;
+      memcpy(whole_frame + total_size_received, buf + 6, recvlen - 6);
+      total_size_received += recvlen - 6;
 
       free(frame_id);
       free(segment_id);
