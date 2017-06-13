@@ -49,8 +49,8 @@
 
 // Preferences.
 static int prefWindowed = TRUE;           // Use windowed (TRUE) or fullscreen mode (FALSE) on launch.
-static int prefWidth = 320;               // Preferred initial window width.
-static int prefHeight = 240;              // Preferred initial window height.
+static int prefWidth = 1280;               // Preferred initial window width.
+static int prefHeight = 960;              // Preferred initial window height.
 static int prefDepth = 16;                // Fullscreen mode bit depth. Set to 0 to use default depth.
 static int prefRefresh = 0;               // Fullscreen mode refresh rate. Set to 0 to use default rate.
 
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
 
   memset((char *)&dstaddr, 0, sizeof(dstaddr));
   dstaddr.sin_family = AF_INET;
-  dstaddr.sin_addr.s_addr = inet_addr("192.168.2.5");
+  dstaddr.sin_addr.s_addr = inet_addr("192.168.2.3");
   //dstaddr.sin_addr.s_addr = inet_addr("131.179.210.120");
   dstaddr.sin_port = htons(10001);
 
