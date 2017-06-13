@@ -2,6 +2,9 @@
 //  Includes
 // ============================================================================
 
+#include <chrono>
+#include <iostream>
+#include <ctime>
 #include <stdio.h>
 #include <stdlib.h>                 // malloc(), free()
 #include <string.h>
@@ -49,8 +52,8 @@
 
 // Preferences.
 static int prefWindowed = TRUE;           // Use windowed (TRUE) or fullscreen mode (FALSE) on launch.
-static int prefWidth = 1280;               // Preferred initial window width.
-static int prefHeight = 960;              // Preferred initial window height.
+static int prefWidth = 320;               // Preferred initial window width.
+static int prefHeight = 240;              // Preferred initial window height.
 static int prefDepth = 16;                // Fullscreen mode bit depth. Set to 0 to use default depth.
 static int prefRefresh = 0;               // Fullscreen mode refresh rate. Set to 0 to use default rate.
 
@@ -593,7 +596,7 @@ void jpegErrorExit (j_common_ptr cinfo)
 
 }
 
-void fast_unpack(char* rgba, const char* rgb, const int count) {
+void fast_unpack(uint8_t* rgba, const uint8_t* rgb, const int count) {
   if(count==0)
     return;
   for(int i=count; --i; rgba+=4, rgb+=3) {
@@ -609,17 +612,18 @@ static void mainLoop(void)
   static int ms_prev;
   float s_elapsed;
   int ms, i, j, k;
+  int frameId;
 
   unsigned char buf[BUFSIZE];
   ARUint8* rgb_frame;
   ARUint8* rgba_frame;
   ARUint8 * whole_frame = (ARUint8 *)malloc(frame_buffer_size);
+  std::chrono::time_point<std::chrono::system_clock> start, end;
 
   int total_size_received = 0;
   int hasStart = 0;
   int last_seg = 0;
   while (true) {
-    printf("waiting on port %d\n", SERVICE_PORT);
     int recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
     if (recvlen > 0) {
       buf[recvlen] = '\0';
@@ -627,16 +631,13 @@ static void mainLoop(void)
       short* frame_id = (short*)malloc(sizeof(short));
       *frame_id = 0;
       memcpy(frame_id, buf, 2);
+      frameId = *frame_id;
       short* segment_id = (short*)malloc(sizeof(short));
       *segment_id = 0;
       memcpy(segment_id, buf + 2, 2);
       short* last_segment_tag = (short*)malloc(sizeof(short));
       *last_segment_tag = 0;
       memcpy(last_segment_tag, buf + 4, 2);
-
-      printf("received message frame id: %d", *frame_id);
-      printf("segment id: %d", *segment_id);
-      printf("received message frame id: %d", *last_segment_tag);
 
       if (*last_segment_tag == 1 && hasStart == 0) {
         free(frame_id);
@@ -648,6 +649,8 @@ static void mainLoop(void)
       else if (*last_segment_tag == 1 && hasStart == 1) {
         memcpy(whole_frame + total_size_received, buf + 6, recvlen - 6);
         total_size_received += recvlen - 6;
+
+        start = std::chrono::system_clock::now();
 
         free(frame_id);
         free(segment_id);
@@ -671,7 +674,7 @@ static void mainLoop(void)
     else
       printf("uh oh - something went wrong!\n");
   }
-  ARLOGe("Received a whole frame of size: %d.\n", total_size_received);
+  // ARLOGe("Received a whole frame of size: %d.\n", total_size_received);
 
   // do JPEG to RGBA
   struct jpeg_decompress_struct cinfo;
@@ -710,7 +713,7 @@ static void mainLoop(void)
   jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
 
-  rgba_frame = (ARUint8 *)malloc(cinfo.image_width*cinfo.image_height*4);
+  rgba_frame = (uint8_t *)malloc(cinfo.image_width*cinfo.image_height*4);
   fast_unpack(rgba_frame, rgb_frame, cinfo.image_width*cinfo.image_height);
 
   // Calculate time delta.
@@ -789,10 +792,12 @@ static void mainLoop(void)
     //char marker_client_buffer[20] = "Hello server!";
 
     //ARLOGe("Size of markers: %d\n", markersNFTCount);
-    if (sendto(send_fd, marker_client_buffer, sizeofinfo, 0, (struct sockaddr *)&dstaddr, sizeof(dstaddr)) < 0)
-      {
-        ARLOGe("Sending markers to client failed.\n");
-      }
+    if (sendto(send_fd, marker_client_buffer, sizeofinfo, 0, (struct sockaddr *)&dstaddr, sizeof(dstaddr)) < 0) {
+      ARLOGe("Sending markers to client failed.\n");
+    }
+    end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::cout << "Processing elapsed time: " << elapsed_seconds.count() << "s\n";
     // free(marker_client_buffer);
 
     ARLOGe("send successully %d, %f, %f, %f\n", detectedPage, trackingTrans[0][0], trackingTrans[0][2], trackingTrans[2][0]);
